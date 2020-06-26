@@ -1,14 +1,42 @@
 const axios = require('axios');
 const tunnel = require('tunnel');
 const express = require('express');
-const bodyParser = require('body-parser')
+const bodyParser = require('body-parser');
+import * as util from "util";
+import * as fs from "fs";
+const { base64encode, base64decode } = require('nodejs-base64');
+
+let configuration = null;
 
 class Bot {
 
     private baseURL = "https://api.telegram.org";
 
-    private getToken() {
-        return "1153495535:AAFwwL0FzrFFHJ8n0FaCc6dCTCN_vH1xyF0";
+    private async getConfigurationFromFile() {
+        let configurationFilePath = __dirname + "/configuration.json";
+        let reader = util.promisify(fs.readFile);
+        return await reader(configurationFilePath, "utf8").then(d => JSON.parse(d)).catch(error => {
+            console.error(error);
+            return null;
+        });
+    }
+
+    public async getConfig(): Promise<any> {
+        if (!configuration) {
+            configuration = await this.getConfigurationFromFile();
+        }
+
+        return configuration;
+    }
+
+    private async getToken() {
+        let config = await this.getConfig();
+        if (config === null) {
+            console.log("can't load apiToken, exiting now");
+            process.exit(1);
+        }
+
+        return config.apiToken;
     }
 
     private getClient() {
@@ -21,7 +49,8 @@ class Bot {
     }
 
     public async setWebhook(url: string) {
-        return await this.getClient().post(`/bot${this.getToken()}/setWebhook`, {
+        let token = await this.getToken();
+        return await this.getClient().post(`/bot${token}/setWebhook`, {
             "url": url
         })
         .then(r => r.data)
@@ -32,11 +61,47 @@ class Bot {
         return await this.setWebhook("");
     }
 
-    public listen(port: number) {
+    private async getHostname() {
+        let config = await this.getConfig();
+        let hostname = config?.hostname;
+
+        if (!hostname) {
+            console.log("can't get hostname, exiting now...");
+            process.exit(1);
+        }
+
+        return hostname;
+    }
+
+    public async listen(port: number) {
+        let webhookURL = await this.getWebhookURL();
+        let token = await this.getToken();
+        let webhookPath = '';
+
+        if (webhookURL !== '') {
+            console.log(`current webhook is ${webhookURL}.`);
+            let urlObject = new URL(webhookURL);
+            webhookPath = urlObject.pathname;
+        }
+        else {
+            console.log("webhook did not set yet, setting webhook now...");
+            let hostname = await this.getHostname();
+            webhookPath = `/webhook/${base64encode(token)}`;
+            webhookURL = `https://${hostname}${webhookPath}`;
+            await this.setWebhook(webhookURL).then(d => {
+                console.log(d);
+                console.log("webhook was set.");
+            });
+
+        }
+
+        await this.getWebhookInfo().then(d => console.log(d));
+        console.log(`listening incoming requests that request for ${webhookPath}`);
+
         let app = express();
         app.use(bodyParser.json());
         // app.use((req, res, next) => this.log(req, res, next));
-        app.post("/webhook/ba2c7cb9-9e08-4784-b32a-7dca12d394df", (req, res) => this.onUpdates(req, res));
+        app.post(webhookPath, (req, res) => this.onUpdates(req, res));
         app.listen(port, () => this.onServerStart(port));
     }
 
@@ -46,9 +111,15 @@ class Bot {
     }
 
     public async getWebhookInfo() {
-        return await this.getClient().get(`/bot${this.getToken()}/getWebhookInfo`)
+        let token = await this.getToken();
+        return await this.getClient().get(`/bot${token}/getWebhookInfo`)
         .then(r => r.data)
         .catch(console.error);
+    }
+
+    public async getWebhookURL() {
+        let url = await this.getWebhookInfo().then(d => d?.result?.url);
+        return url;
     }
 
     private onUpdates(req, res) {
@@ -104,7 +175,8 @@ class Bot {
     }
 
     private async deleteMessage(chatID, messageID) {
-        return await this.getClient().post(`/bot${this.getToken()}/deleteMessage`, {
+        let token = await this.getToken();
+        return await this.getClient().post(`/bot${token}/deleteMessage`, {
             "chat_id": chatID,
             "message_id": messageID
         }).then(r => r.data).catch(console.error);
@@ -115,7 +187,8 @@ class Bot {
     }
 
     public async getMe() {
-        return await this.getClient().get(`/bot${this.getToken()}/getMe`).then(r => r.data).catch(console.error);
+        let token = await this.getToken();
+        return await this.getClient().get(`/bot${token}/getMe`).then(r => r.data).catch(console.error);
     }
 }
 
@@ -130,3 +203,8 @@ let bot = new Bot();
 
 bot.listen(8792);
 // bot.getWebhookInfo().then(d => console.log(d));
+
+
+// bot.getConfig();
+
+// bot.getMe().then(d => console.log(d));
