@@ -157,15 +157,16 @@ class Bot {
                 console.log("member left chat");
                 msg["leftChatMemberID"] = leftChatMemberID;
                 msg["leftChatMemberUsername"] = leftChatMemberUsername;
+                this.deleteMessage(chatID, messageID).then(d => console.log(d));
             }
 
             if (newChatMember) {
                 console.log("member join chat");
                 msg["newMemberID"] = newMemberID;
                 msg["newMemberUsername"] = newMemberUsername;
+                this.deleteMessage(chatID, messageID).then(d => console.log(d));
             }
 
-            this.deleteMessage(chatID, messageID).then(d => console.log(d));
 
             console.log(update);
             console.log(msg);
