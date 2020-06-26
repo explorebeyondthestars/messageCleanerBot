@@ -1,4 +1,4 @@
 {
     "apiToken": "bot_api_token",
-    "hostname": "host_name_or_domain_name_of_this_server"
+    "hostname": "host_name_or_domain_name_of_this_server_, for example www.yourdomain.com"
 }
