@@ -1,8 +1,10 @@
 # 简易消息清理机器人
 
-简介：一款可以自动删除电报群组入群消息和退群消息的机器人
+简介：一款可以自动删除电报群组入群消息和退群消息的机器人，为了应对Telegram账户长用户名中被故意植入广告且通过批量加群传播广告的滥用行为．
 
-## 部署方式
+## 自建实例部署方式
+
+自建实例部署具体是指通过设置webhook和部署此系统使自己控制下的机器人能够在拥有删除消息权限时具有自动删除Telegram群组入群消息和退群消息的功能．
 
 首先进入项目根目录，复制
 
@@ -65,7 +67,7 @@ started: 8792
 
 完成以上配置后bot即部署完成．
 
-## 现有实例
+## 现有实例部署方式
 
 依源代码将自己申请的bot转变为消息清理机器人需要有1）域名，和2）VPS主机，若不全满足这两项条件，同样可以体验消息清理机器人的服务，以最新版桌面端Telegram为例，首先进入群组，点击图示中的框线范围，打开群组资料页面：
 
@@ -112,3 +114,25 @@ started: 8792
 ![确认添加](/documentations/screenshots/tutorial/11x.png)
 
 这样就完成了消息清理机器人的部署，以后这个群组出现的进群和退群消息都会被`@messageCleaningExpertBot`自动删除．
+
+## 常见问题
+
+问：删除了新成员入群的消息，会影响到PolicrBot的正常工作吗？
+
+答：经测试不会，PolicrBot可以正常工作，理论上，基于Webhook机制的验证码机器人都可以正常工作．
+
+问：该机器人需要哪些权限方能正常工作？
+
+答：至少需要成为具有「删除消息」权限的群管理员（Administrator）才能够正常工作，其他的权限暂不需要．
+
+问：需要进行哪些额外配置吗？
+
+答：目前暂不需要，只需邀请该机器人进入群组并授权（管理员+删除消息权限）即可，不需要进行额外的配置，全程静默工作，仅在服务器端有工作日志．
+
+问：如果我邀请`@messageCleaningExpertBot`进群并提升为管理员，而后`@messageCleaningExpertBot`的`api_token`泄露或者其Webhook响应程序被恶意劫持和串改，可能会对我，对`@messageCleaningExpertBot`加入的群组，对`@messageCleaningExpertBot`加入的群组的群成员有何影响或危害？
+
+答：如果运行着`@messageCleaningExpertBot`的Webhook响应程序的服务器被入侵，那么`@messageCleaningExpertBot`的工作日志会被非授权人士查看，意味着，`@messageCleaningExpertBot`所加入的群组的部分群成员的`username`,`user_id`和群组的`username`和`chat_id`会被泄露，同时，由于`api_token`泄露，并且`@messageCleaningExpertBot`具有删除消息的权限，可能导致`@messageCleaningExpertBot`所加入的群组的部分或全部消息被恶意删除，但是，如果`@messageCleaningExpertBot`仅具有「删除消息」的权限，那么影响将会仅限于此，不会有人被恶意踢出群组，群组的信息也不会被恶意修改，同时`@messageCleaningExpertBot`也不能够要求不合格的成员加入群聊（因为不具备权限），综上所述，影响范围有限且损失可控．
+
+问：启动并部署该项目的动机是什么？
+
+答：减少不良广告的出现，营造良好上网交流环境．
