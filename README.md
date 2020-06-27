@@ -43,7 +43,7 @@ webhook was set.
 {
   ok: true,
   result: {
-    url: 'https://bot.automata.best/webhook/xxx',
+    url: 'https://whatever.com/webhook/xxx',
     has_custom_certificate: false,
     pending_update_count: 0,
     max_connections: 40
