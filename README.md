@@ -115,11 +115,19 @@ started: 8792
 
 这样就完成了消息清理机器人的部署，以后这个群组出现的进群和退群消息都会被`@messageCleaningExpertBot`自动删除．
 
+## 工作原理
+
+当群组有新消息时，新消息（根据Telegram Bot API被抽象为所谓的"update"或称"update对象"）根据[Telegram Bot API](https://core.telegram.org/bots/api)官方提供的Webhook机制被以HTTP POST请求的方式发送到一个特定的服务器（例如yourdomain.com）的特定端口（例如443）的特点路径（例如/xxx），`bot.ts`编译成`bot.js`，并通过`node bot.js`命令启动，实际上就是启动了一个服务器（目前监听8792端口），当update到达443端口时，网页服务器例如NginX或者Apache或者Caddy会自动地将update转发到8792端口，然后我们的`bot.js`就开始处理update了：接下来，`bot.js`会从update对象中提取必要的信息，判断该update是否是因为新成员加入群组或者成员被移出群组而产生的，如果是，那么，`bot.js`会提取该加入群组提示消息/移出群组提示消息的`message_id`和`chat_id`，然后调用Telegram Bot API提供的`/deleteMessage`接口将消息予以删除．
+
 ## 常见问题
 
 问：删除了新成员入群的消息，会影响到PolicrBot的正常工作吗？
 
 答：经测试不会，PolicrBot可以正常工作，理论上，基于Webhook机制的验证码机器人都可以正常工作．
+
+问：目前能够对入群成员的正常长用户名和广告长用户名做区分吗，从而只删除长用户名带广告的入群/退群消息提示而不删除正常长用户名的入群/退群提示？
+
+答：暂时不能．暂时只会一刀切地删除所有入群/退群提示消息．
 
 问：该机器人需要哪些权限方能正常工作？
 
@@ -136,3 +144,7 @@ started: 8792
 问：启动并部署该项目的动机是什么？
 
 答：减少不良广告的出现，营造良好上网交流环境．
+
+问：我能够获取`@messageCleaningExpertBot`的Webhook响应程序`bot.js`的工作日志吗？
+
+答：请根据GitHub上显示的线索（例如项目页面的Issue或者项目创建者的电邮）联络我们，我们会尽快响应您的要求．目前，由于时间所限，暂时还不支持自助式地查看`bot.js`的工作日志．事实上，`@messageCleaningExpertBot`由于内置的逻辑极其简单，所以亦不容易出错，即使出现异常，也必将能够快速定位问题，请您放心！
